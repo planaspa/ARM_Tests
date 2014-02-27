@@ -1,0 +1,1 @@
+suma.o: suma.s

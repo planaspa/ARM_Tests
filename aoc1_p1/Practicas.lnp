@@ -1,0 +1,4 @@
+--cpu ARM7TDMI "practica1.o" --strict --scatter ".\aoc1_p1\practica1.sct" 
+--autoat --summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\Practicas.map" -o "Practicas.axf"

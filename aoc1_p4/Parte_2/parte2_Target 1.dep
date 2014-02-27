@@ -1,0 +1,5 @@
+Dependencies for Project 'parte2', Target 'Target 1': (DO NOT MODIFY !)
+F (.\Startup.s)(0x4C811FF4)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I "C:\Program Files\ARM\INC" -I "C:\Program Files\ARM\INC\Philips" --list "Startup.lst" --xref -o "Startup.o" --depend "Startup.d")
+F (.\progC.c)(0x51C37300)(-c --cpu ARM7TDMI -D__EVAL -g -O0 --apcs=interwork -I "C:\Program Files\ARM\INC" -I "C:\Program Files\ARM\INC\Philips" -o "progc.o" --omf_browse "progc.crf" --depend "progc.d")
+I (C:\Program Files\ARM\RV31\INC\stdlib.h)(0x4C71D2FA)
+F (.\ordena.s)(0x51C37382)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I "C:\Program Files\ARM\INC" -I "C:\Program Files\ARM\INC\Philips" --list "ordena.lst" --xref -o "ordena.o" --depend "ordena.d")

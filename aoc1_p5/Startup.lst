@@ -1,0 +1,1548 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;/******************************************************
+                       ***********************/ 
+    2 00000000         ;/* Carlos Jose Perez Jimenez 
+    3 00000000         ;/* Mayo 2011 
+    4 00000000         ;/* 
+    5 00000000         ;/* Modificado el Startup de keil para adaptar todo el s
+                       istema de E/S 
+    6 00000000         ;/* a las particularidades de AOC1 
+    7 00000000         ;/* 
+    8 00000000         ;/* Procesador -> modo SVC 
+    9 00000000         ;/*   No se inicializa pila en modo USER 
+   10 00000000         ;/*   Flag I inicializado a 0, F a 1 
+   11 00000000         ;/*  
+   12 00000000         ;/* VIC configurado con todas las entradas vectorizadas 
+                       y manteniendo orden de prioridades 
+   13 00000000         ;/* Timer 0 -> 100 interrupciones por segundo 
+   14 00000000         ;/* 
+   15 00000000         ;/******************************************************
+                       ***********************/ 
+   16 00000000         ;/* STARTUP.S: Startup file for Philips LPC2000         
+                                             */ 
+   17 00000000         ;/******************************************************
+                       ***********************/ 
+   18 00000000         ;/* <<< Use Configuration Wizard in Context Menu >>>    
+                                             */  
+   19 00000000         ;/******************************************************
+                       ***********************/ 
+   20 00000000         ;/* This file is part of the uVision/ARM development too
+                       ls.                   */ 
+   21 00000000         ;/* Copyright (c) 2005-2007 Keil Software. All rights re
+                       served.               */ 
+   22 00000000         ;/* This software may only be used under the terms of a 
+                       valid, current,       */ 
+   23 00000000         ;/* end user licence from KEIL for a compatible version 
+                       of KEIL software      */ 
+   24 00000000         ;/* development tools. Nothing else gives you the right 
+                       to use this software. */ 
+   25 00000000         ;/******************************************************
+                       ***********************/ 
+   26 00000000         
+   27 00000000         
+   28 00000000         ;/* 
+   29 00000000         ; *  The STARTUP.S code is executed after CPU Reset. Thi
+                       s file may be  
+   30 00000000         ; *  translated with the following SET symbols. In uVisi
+                       on these SET  
+   31 00000000         ; *  symbols are entered under Options - ASM - Define. 
+   32 00000000         ; * 
+   33 00000000         ; *  REMAP: when set the startup code initializes the re
+                       gister MEMMAP  
+   34 00000000         ; *  which overwrites the settings of the CPU configurat
+                       ion pins. The  
+   35 00000000         ; *  startup and interrupt vectors are remapped from: 
+   36 00000000         ; *     0x00000000  default setting (not remapped) 
+   37 00000000         ; *     0x80000000  when EXTMEM_MODE is used 
+   38 00000000         ; *     0x40000000  when RAM_MODE is used 
+   39 00000000         ; * 
+   40 00000000         ; *  EXTMEM_MODE: when set the device is configured for 
+                       code execution 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   41 00000000         ; *  from external memory starting at address 0x80000000
+                       . 
+   42 00000000         ; * 
+   43 00000000         ; *  RAM_MODE: when set the device is configured for cod
+                       e execution 
+   44 00000000         ; *  from on-chip RAM starting at address 0x40000000. 
+   45 00000000         ; * 
+   46 00000000         ; *  EXTERNAL_MODE: when set the PIN2SEL values are writ
+                       ten that enable 
+   47 00000000         ; *  the external BUS at startup. 
+   48 00000000         ; */ 
+   49 00000000         
+   50 00000000         
+   51 00000000         ; Standard definitions of Mode bits and Interrupt (I & F
+                       ) flags in PSRs 
+   52 00000000         
+   53 00000000 00000010 
+                       Mode_USR
+                               EQU              0x10
+   54 00000000 00000011 
+                       Mode_FIQ
+                               EQU              0x11
+   55 00000000 00000012 
+                       Mode_IRQ
+                               EQU              0x12
+   56 00000000 00000013 
+                       Mode_SVC
+                               EQU              0x13
+   57 00000000 00000017 
+                       Mode_ABT
+                               EQU              0x17
+   58 00000000 0000001B 
+                       Mode_UND
+                               EQU              0x1B
+   59 00000000 0000001F 
+                       Mode_SYS
+                               EQU              0x1F
+   60 00000000         
+   61 00000000 00000080 
+                       I_Bit   EQU              0x80        ; when I bit is set
+                                                            , IRQ is disabled 
+   62 00000000 00000040 
+                       F_Bit   EQU              0x40        ; when F bit is set
+                                                            , FIQ is disabled 
+   63 00000000         
+   64 00000000         
+   65 00000000         ;// <h> Stack Configuration (Stack Sizes in Bytes) 
+   66 00000000         ;//   <o0> Undefined Mode      <0x0-0xFFFFFFFF:8> 
+   67 00000000         ;//   <o1> Supervisor Mode     <0x0-0xFFFFFFFF:8> 
+   68 00000000         ;//   <o2> Abort Mode          <0x0-0xFFFFFFFF:8> 
+   69 00000000         ;//   <o3> Fast Interrupt Mode <0x0-0xFFFFFFFF:8> 
+   70 00000000         ;//   <o4> Interrupt Mode      <0x0-0xFFFFFFFF:8> 
+   71 00000000         ;//   <o5> User/System Mode    <0x0-0xFFFFFFFF:8> 
+   72 00000000         ;// </h> 
+   73 00000000         
+   74 00000000 00000000 
+                       UND_Stack_Size
+                               EQU              0x00000000
+   75 00000000 00000400 
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+                       SVC_Stack_Size
+                               EQU              0x00000400
+   76 00000000 00000000 
+                       ABT_Stack_Size
+                               EQU              0x00000000
+   77 00000000 00000000 
+                       FIQ_Stack_Size
+                               EQU              0x00000000
+   78 00000000 00000400 
+                       IRQ_Stack_Size
+                               EQU              0x00000400
+   79 00000000 00000000 
+                       USR_Stack_Size
+                               EQU              0x00000000
+   80 00000000         
+   82 00000000 00000800 
+                       ISR_Stack_Size
+                               EQU              (UND_Stack_Size + SVC_Stack_Siz
+e + ABT_Stack_Size +                           FIQ_Stack_Size + IRQ_Stack_Size
+)
+   83 00000000         
+   84 00000000                 AREA             STACK, NOINIT, READWRITE, ALIGN
+=3
+   85 00000000         
+   86 00000000         Stack_Mem
+                               SPACE            USR_Stack_Size
+   87 00000000         __initial_sp
+                               SPACE            ISR_Stack_Size
+   88 00000800         
+   89 00000800         Stack_Top
+   90 00000800         
+   91 00000800         
+   92 00000800         ;// <h> Heap Configuration 
+   93 00000800         ;//   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF> 
+   94 00000800         ;// </h> 
+   95 00000800         
+   96 00000800 00000000 
+                       Heap_Size
+                               EQU              0x00000000
+   97 00000800         
+   98 00000800                 AREA             HEAP, NOINIT, READWRITE, ALIGN=
+3
+   99 00000000         __heap_base
+  100 00000000         Heap_Mem
+                               SPACE            Heap_Size
+  101 00000000         __heap_limit
+  102 00000000         
+  103 00000000         
+  104 00000000         ; VPBDIV definitions 
+  105 00000000 E01FC100 
+                       VPBDIV  EQU              0xE01FC100  ; VPBDIV Address 
+  106 00000000         
+  107 00000000         ;// <e> VPBDIV Setup 
+  108 00000000         ;// <i> Peripheral Bus Clock Rate 
+  109 00000000         ;//   <o1.0..1>   VPBDIV: VPB Clock 
+  110 00000000         ;//               <0=> VPB Clock = CPU Clock / 4 
+  111 00000000         ;//               <1=> VPB Clock = CPU Clock 
+  112 00000000         ;//               <2=> VPB Clock = CPU Clock / 2 
+  113 00000000         ;//   <o1.4..5>   XCLKDIV: XCLK Pin 
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  114 00000000         ;//               <0=> XCLK Pin = CPU Clock / 4 
+  115 00000000         ;//               <1=> XCLK Pin = CPU Clock 
+  116 00000000         ;//               <2=> XCLK Pin = CPU Clock / 2 
+  117 00000000         ;// </e> 
+  118 00000000 00000000 
+                       VPBDIV_SETUP
+                               EQU              0
+  119 00000000 00000000 
+                       VPBDIV_Val
+                               EQU              0x00000000
+  120 00000000         
+  121 00000000         
+  122 00000000         ; Phase Locked Loop (PLL) definitions 
+  123 00000000 E01FC080 
+                       PLL_BASE
+                               EQU              0xE01FC080  ; PLL Base Address 
+                                                            
+  124 00000000 00000000 
+                       PLLCON_OFS
+                               EQU              0x00        ; PLL Control Offse
+                                                            t 
+  125 00000000 00000004 
+                       PLLCFG_OFS
+                               EQU              0x04        ; PLL Configuration
+                                                             Offset 
+  126 00000000 00000008 
+                       PLLSTAT_OFS
+                               EQU              0x08        ; PLL Status Offset
+                                                             
+  127 00000000 0000000C 
+                       PLLFEED_OFS
+                               EQU              0x0C        ; PLL Feed Offset 
+  128 00000000 00000001 
+                       PLLCON_PLLE
+                               EQU              (1<<0)      ; PLL Enable 
+  129 00000000 00000002 
+                       PLLCON_PLLC
+                               EQU              (1<<1)      ; PLL Connect 
+  130 00000000 0000001F 
+                       PLLCFG_MSEL
+                               EQU              (0x1F<<0)   ; PLL Multiplier 
+  131 00000000 00000060 
+                       PLLCFG_PSEL
+                               EQU              (0x03<<5)   ; PLL Divider 
+  132 00000000 00000400 
+                       PLLSTAT_PLOCK
+                               EQU              (1<<10)     ; PLL Lock Status 
+  133 00000000         
+  134 00000000         ;// <e> PLL Setup 
+  135 00000000         ;//   <o1.0..4>   MSEL: PLL Multiplier Selection 
+  136 00000000         ;//               <1-32><#-1> 
+  137 00000000         ;//               <i> M Value 
+  138 00000000         ;//   <o1.5..6>   PSEL: PLL Divider Selection 
+  139 00000000         ;//               <0=> 1   <1=> 2   <2=> 4   <3=> 8 
+  140 00000000         ;//               <i> P Value 
+  141 00000000         ;// </e> 
+  142 00000000 00000001 
+                       PLL_SETUP
+                               EQU              1
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  143 00000000 00000024 
+                       PLLCFG_Val
+                               EQU              0x00000024
+  144 00000000         
+  145 00000000         
+  146 00000000         ; Memory Accelerator Module (MAM) definitions 
+  147 00000000 E01FC000 
+                       MAM_BASE
+                               EQU              0xE01FC000  ; MAM Base Address 
+                                                            
+  148 00000000 00000000 
+                       MAMCR_OFS
+                               EQU              0x00        ; MAM Control Offse
+                                                            t 
+  149 00000000 00000004 
+                       MAMTIM_OFS
+                               EQU              0x04        ; MAM Timing Offset
+                                                             
+  150 00000000         
+  151 00000000         ;// <e> MAM Setup 
+  152 00000000         ;//   <o1.0..1>   MAM Control 
+  153 00000000         ;//               <0=> Disabled 
+  154 00000000         ;//               <1=> Partially Enabled 
+  155 00000000         ;//               <2=> Fully Enabled 
+  156 00000000         ;//               <i> Mode 
+  157 00000000         ;//   <o2.0..2>   MAM Timing 
+  158 00000000         ;//               <0=> Reserved  <1=> 1   <2=> 2   <3=> 
+                       3 
+  159 00000000         ;//               <4=> 4         <5=> 5   <6=> 6   <7=> 
+                       7 
+  160 00000000         ;//               <i> Fetch Cycles 
+  161 00000000         ;// </e> 
+  162 00000000 00000001 
+                       MAM_SETUP
+                               EQU              1
+  163 00000000 00000002 
+                       MAMCR_Val
+                               EQU              0x00000002
+  164 00000000 00000004 
+                       MAMTIM_Val
+                               EQU              0x00000004
+  165 00000000         
+  166 00000000         
+  167 00000000         ; External Memory Controller (EMC) definitions 
+  168 00000000 FFE00000 
+                       EMC_BASE
+                               EQU              0xFFE00000  ; EMC Base Address 
+                                                            
+  169 00000000 00000000 
+                       BCFG0_OFS
+                               EQU              0x00        ; BCFG0 Offset 
+  170 00000000 00000004 
+                       BCFG1_OFS
+                               EQU              0x04        ; BCFG1 Offset 
+  171 00000000 00000008 
+                       BCFG2_OFS
+                               EQU              0x08        ; BCFG2 Offset 
+  172 00000000 0000000C 
+                       BCFG3_OFS
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+                               EQU              0x0C        ; BCFG3 Offset 
+  173 00000000         
+  174 00000000         ;// <e> External Memory Controller (EMC) 
+  175 00000000 00000000 
+                       EMC_SETUP
+                               EQU              0
+  176 00000000         
+  177 00000000         ;//   <e> Bank Configuration 0 (BCFG0) 
+  178 00000000         ;//     <o1.0..3>   IDCY: Idle Cycles <0-15> 
+  179 00000000         ;//     <o1.5..9>   WST1: Wait States 1 <0-31> 
+  180 00000000         ;//     <o1.11..15> WST2: Wait States 2 <0-31> 
+  181 00000000         ;//     <o1.10>     RBLE: Read Byte Lane Enable 
+  182 00000000         ;//     <o1.26>     WP: Write Protect 
+  183 00000000         ;//     <o1.27>     BM: Burst ROM 
+  184 00000000         ;//     <o1.28..29> MW: Memory Width  <0=>  8-bit  <1=> 
+                       16-bit 
+  185 00000000         ;//                                   <2=> 32-bit  <3=> 
+                       Reserved 
+  186 00000000         ;//   </e> 
+  187 00000000 00000000 
+                       BCFG0_SETUP
+                               EQU              0
+  188 00000000 0000FBEF 
+                       BCFG0_Val
+                               EQU              0x0000FBEF
+  189 00000000         
+  190 00000000         ;//   <e> Bank Configuration 1 (BCFG1) 
+  191 00000000         ;//     <o1.0..3>   IDCY: Idle Cycles <0-15> 
+  192 00000000         ;//     <o1.5..9>   WST1: Wait States 1 <0-31> 
+  193 00000000         ;//     <o1.11..15> WST2: Wait States 2 <0-31> 
+  194 00000000         ;//     <o1.10>     RBLE: Read Byte Lane Enable 
+  195 00000000         ;//     <o1.26>     WP: Write Protect 
+  196 00000000         ;//     <o1.27>     BM: Burst ROM 
+  197 00000000         ;//     <o1.28..29> MW: Memory Width  <0=>  8-bit  <1=> 
+                       16-bit 
+  198 00000000         ;//                                   <2=> 32-bit  <3=> 
+                       Reserved 
+  199 00000000         ;//   </e> 
+  200 00000000 00000000 
+                       BCFG1_SETUP
+                               EQU              0
+  201 00000000 0000FBEF 
+                       BCFG1_Val
+                               EQU              0x0000FBEF
+  202 00000000         
+  203 00000000         ;//   <e> Bank Configuration 2 (BCFG2) 
+  204 00000000         ;//     <o1.0..3>   IDCY: Idle Cycles <0-15> 
+  205 00000000         ;//     <o1.5..9>   WST1: Wait States 1 <0-31> 
+  206 00000000         ;//     <o1.11..15> WST2: Wait States 2 <0-31> 
+  207 00000000         ;//     <o1.10>     RBLE: Read Byte Lane Enable 
+  208 00000000         ;//     <o1.26>     WP: Write Protect 
+  209 00000000         ;//     <o1.27>     BM: Burst ROM 
+  210 00000000         ;//     <o1.28..29> MW: Memory Width  <0=>  8-bit  <1=> 
+                       16-bit 
+  211 00000000         ;//                                   <2=> 32-bit  <3=> 
+                       Reserved 
+  212 00000000         ;//   </e> 
+  213 00000000 00000000 
+                       BCFG2_SETUP
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+                               EQU              0
+  214 00000000 0000FBEF 
+                       BCFG2_Val
+                               EQU              0x0000FBEF
+  215 00000000         
+  216 00000000         ;//   <e> Bank Configuration 3 (BCFG3) 
+  217 00000000         ;//     <o1.0..3>   IDCY: Idle Cycles <0-15> 
+  218 00000000         ;//     <o1.5..9>   WST1: Wait States 1 <0-31> 
+  219 00000000         ;//     <o1.11..15> WST2: Wait States 2 <0-31> 
+  220 00000000         ;//     <o1.10>     RBLE: Read Byte Lane Enable 
+  221 00000000         ;//     <o1.26>     WP: Write Protect 
+  222 00000000         ;//     <o1.27>     BM: Burst ROM 
+  223 00000000         ;//     <o1.28..29> MW: Memory Width  <0=>  8-bit  <1=> 
+                       16-bit 
+  224 00000000         ;//                                   <2=> 32-bit  <3=> 
+                       Reserved 
+  225 00000000         ;//   </e> 
+  226 00000000 00000000 
+                       BCFG3_SETUP
+                               EQU              0
+  227 00000000 0000FBEF 
+                       BCFG3_Val
+                               EQU              0x0000FBEF
+  228 00000000         
+  229 00000000         ;// </e> End of EMC 
+  230 00000000         
+  231 00000000         
+  232 00000000         ; External Memory Pins definitions 
+  233 00000000 E002C014 
+                       PINSEL2 EQU              0xE002C014  ; PINSEL2 Address 
+  234 00000000 0E6149E4 
+                       PINSEL2_Val
+                               EQU              0x0E6149E4  ; CS0..3, OE, WE, B
+                                                            LS0..3,  
+  235 00000000         ; D0..31, A2..23, JTAG Pins 
+  236 00000000         
+  237 00000000         
+  238 00000000                 PRESERVE8
+  239 00000000         
+  240 00000000         
+  241 00000000         ; Area Definition and Entry Point 
+  242 00000000         ;  Startup Code must be linked first at Address at which
+                        it expects to run. 
+  243 00000000         
+  244 00000000                 AREA             RESET, CODE, READONLY
+  245 00000000                 ARM
+  246 00000000                 ENTRY
+  247 00000000         
+  248 00000000         ; Exception Vectors 
+  249 00000000         ;  Mapped to Address 0. 
+  250 00000000         ;  Absolute addressing mode must be used. 
+  251 00000000         ;  Dummy Handlers are implemented as infinite loops whic
+                       h can be modified. 
+  252 00000000         
+  253 00000000 E59FF018 
+                       Vectors LDR              PC, Reset_Addr
+  254 00000004 E59FF018        LDR              PC, Undef_Addr
+  255 00000008 E59FF018        LDR              PC, SWI_Addr
+  256 0000000C E59FF018        LDR              PC, PAbt_Addr
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+  257 00000010 E59FF018        LDR              PC, DAbt_Addr
+  258 00000014 E1A00000        NOP                          ; Reserved Vector  
+                                                            
+  259 00000018         ;               LDR     PC, IRQ_Addr 
+  260 00000018 E51FFFF0        LDR              PC, [PC, #-0x0FF0] ; Vector fro
+                                                            m VicVectAddr 
+  261 0000001C E59FF018        LDR              PC, FIQ_Addr
+  262 00000020         
+  263 00000020 00000000 
+                       Reset_Addr
+                               DCD              RSE_Reset
+  264 00000024 00000000 
+                       Undef_Addr
+                               DCD              RSE_Undef
+  265 00000028 00000000 
+                       SWI_Addr
+                               DCD              RSE_SWI
+  266 0000002C 00000000 
+                       PAbt_Addr
+                               DCD              RSE_PAbt
+  267 00000030 00000000 
+                       DAbt_Addr
+                               DCD              RSE_DAbt
+  268 00000034 00000000        DCD              0           ; Reserved Address 
+                                                             
+  269 00000038 00000000 
+                       IRQ_Addr
+                               DCD              RSE_IRQ
+  270 0000003C 00000000 
+                       FIQ_Addr
+                               DCD              RSE_FIQ
+  271 00000040         
+  272 00000040 EAFFFFFE 
+                       RSE_Undef
+                               B                RSE_Undef
+  273 00000044 EAFFFFFE 
+                       RSE_SWI B                RSE_SWI
+  274 00000048 EAFFFFFE 
+                       RSE_PAbt
+                               B                RSE_PAbt
+  275 0000004C EAFFFFFE 
+                       RSE_DAbt
+                               B                RSE_DAbt
+  276 00000050 EAFFFFFE 
+                       RSE_IRQ B                RSE_IRQ
+  277 00000054 EAFFFFFE 
+                       RSE_FIQ B                RSE_FIQ
+  278 00000058         
+  279 00000058         
+  280 00000058         ; Reset Handler 
+  281 00000058         
+  282 00000058         ;                EXPORT  RSE_Reset 
+  283 00000058         RSE_Reset
+  284 00000058         
+  285 00000058         
+  286 00000058         ; Setup External Memory Pins 
+  287 00000058                 IF               :DEF:EXTERNAL_MODE
+  291                          ENDIF
+  292 00000058         
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  293 00000058         
+  294 00000058         ; Setup External Memory Controller 
+  295 00000058                 IF               EMC_SETUP <> 0
+  318                          ENDIF                        ; EMC_SETUP 
+  319 00000058         
+  320 00000058         
+  321 00000058         ; Setup VPBDIV 
+  322 00000058                 IF               VPBDIV_SETUP <> 0
+  326                          ENDIF
+  327 00000058         
+  328 00000058         
+  329 00000058         ; Setup PLL 
+  330 00000058                 IF               PLL_SETUP <> 0
+  331 00000058 E59F0108        LDR              R0, =PLL_BASE
+  332 0000005C E3A010AA        MOV              R1, #0xAA
+  333 00000060 E3A02055        MOV              R2, #0x55
+  334 00000064         
+  335 00000064         ;  Configure and Enable PLL 
+  336 00000064 E3A03024        MOV              R3, #PLLCFG_Val
+  337 00000068 E5803004        STR              R3, [R0, #PLLCFG_OFS]
+  338 0000006C E3A03001        MOV              R3, #PLLCON_PLLE
+  339 00000070 E5803000        STR              R3, [R0, #PLLCON_OFS]
+  340 00000074 E580100C        STR              R1, [R0, #PLLFEED_OFS]
+  341 00000078 E580200C        STR              R2, [R0, #PLLFEED_OFS]
+  342 0000007C         
+  343 0000007C         ;  Wait until PLL Locked 
+  344 0000007C E5903008 
+                       PLL_Loop
+                               LDR              R3, [R0, #PLLSTAT_OFS]
+  345 00000080 E2133B01        ANDS             R3, R3, #PLLSTAT_PLOCK
+  346 00000084 0AFFFFFC        BEQ              PLL_Loop
+  347 00000088         
+  348 00000088         ;  Switch to PLL Clock 
+  349 00000088 E3A03003        MOV              R3, #(PLLCON_PLLE:OR:PLLCON_PLL
+C)
+  350 0000008C E5803000        STR              R3, [R0, #PLLCON_OFS]
+  351 00000090 E580100C        STR              R1, [R0, #PLLFEED_OFS]
+  352 00000094 E580200C        STR              R2, [R0, #PLLFEED_OFS]
+  353 00000098                 ENDIF                        ; PLL_SETUP 
+  354 00000098         
+  355 00000098         
+  356 00000098         ; Setup MAM 
+  357 00000098                 IF               MAM_SETUP <> 0
+  358 00000098 E59F00CC        LDR              R0, =MAM_BASE
+  359 0000009C E3A01004        MOV              R1, #MAMTIM_Val
+  360 000000A0 E5801004        STR              R1, [R0, #MAMTIM_OFS]
+  361 000000A4 E3A01002        MOV              R1, #MAMCR_Val
+  362 000000A8 E5801000        STR              R1, [R0, #MAMCR_OFS]
+  363 000000AC                 ENDIF                        ; MAM_SETUP 
+  364 000000AC         
+  365 000000AC         
+  366 000000AC         ; Memory Mapping (when Interrupt Vectors are in RAM) 
+  367 000000AC E01FC040 
+                       MEMMAP  EQU              0xE01FC040  ; Memory Mapping Co
+                                                            ntrol 
+  368 000000AC                 IF               :DEF:REMAP
+  378                          ENDIF
+  379 000000AC         
+  380 000000AC         
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+  381 000000AC         ; Initialise Interrupt System 
+  382 000000AC         ;  ... 
+  383 000000AC         
+  384 000000AC         
+  385 000000AC         ; Setup Stack for each mode 
+  386 000000AC         
+  387 000000AC E59F00BC        LDR              R0, =Stack_Top
+  388 000000B0         
+  389 000000B0         ;  Enter Undefined Instruction Mode and set its Stack Po
+                       inter 
+  390 000000B0 E321F0DB        MSR              CPSR_c, #Mode_UND:OR:I_Bit:OR:F
+_Bit
+  391 000000B4 E1A0D000        MOV              SP, R0
+  392 000000B8 E2400000        SUB              R0, R0, #UND_Stack_Size
+  393 000000BC         
+  394 000000BC         ;  Enter Abort Mode and set its Stack Pointer 
+  395 000000BC E321F0D7        MSR              CPSR_c, #Mode_ABT:OR:I_Bit:OR:F
+_Bit
+  396 000000C0 E1A0D000        MOV              SP, R0
+  397 000000C4 E2400000        SUB              R0, R0, #ABT_Stack_Size
+  398 000000C8         
+  399 000000C8         ;  Enter FIQ Mode and set its Stack Pointer 
+  400 000000C8 E321F0D1        MSR              CPSR_c, #Mode_FIQ:OR:I_Bit:OR:F
+_Bit
+  401 000000CC E1A0D000        MOV              SP, R0
+  402 000000D0 E2400000        SUB              R0, R0, #FIQ_Stack_Size
+  403 000000D4         
+  404 000000D4         ;  Enter IRQ Mode and set its Stack Pointer 
+  405 000000D4 E321F0D2        MSR              CPSR_c, #Mode_IRQ:OR:I_Bit:OR:F
+_Bit
+  406 000000D8 E1A0D000        MOV              SP, R0
+  407 000000DC E2400B01        SUB              R0, R0, #IRQ_Stack_Size
+  408 000000E0         
+  409 000000E0         ;  Enter Supervisor Mode and set its Stack Pointer 
+  410 000000E0 E321F0D3        MSR              CPSR_c, #Mode_SVC:OR:I_Bit:OR:F
+_Bit
+  411 000000E4 E1A0D000        MOV              SP, R0
+  412 000000E8 E2400B01        SUB              R0, R0, #SVC_Stack_Size
+  413 000000EC         
+  414 000000EC         ;  Enter User Mode and set its Stack Pointer 
+  415 000000EC         ;                MSR     CPSR_c, #Mode_USR 
+  416 000000EC         ;                IF      :DEF:__MICROLIB 
+  417 000000EC         ; 
+  418 000000EC         ;                EXPORT __initial_sp 
+  419 000000EC         ; 
+  420 000000EC         ;                ELSE 
+  421 000000EC         ; 
+  422 000000EC         ;                MOV     SP, R0 
+  423 000000EC         ;                SUB     SL, SP, #USR_Stack_Size 
+  424 000000EC         ; 
+  425 000000EC         ;                ENDIF 
+  426 000000EC         
+  427 000000EC E10F0000        mrs              r0,cpsr
+  428 000000F0 E3C00080        bic              r0,r0,#0x80
+  429 000000F4 E121F000        msr              cpsr_c,r0
+  430 000000F8         
+  431 000000F8 EA000003        b                sigue
+  432 000000FC         
+  433 000000FC 00 01 02 
+
+
+
+ARM Macro Assembler    Page 11 
+
+
+              03 04 05 
+              06 07 08 
+              09 0A 0C 
+              0D 0E 0F 
+              10       chanel2irq
+                               DCB              0,1,2,3,4,5,6,7,8,9,10,12,13,14
+,15,16
+  434 0000010C                 ALIGN
+  435 0000010C         
+  436 0000010C E59F0060 
+                       sigue   LDR              r0,=0xFFFFF200
+  437 00000110 E59F1060        LDR              r1,=chanel2irq
+  438 00000114 E0222002        eor              r2,r2,r2
+  439 00000118 E4D13001 
+                       buc     ldrb             r3,[r1],#1
+  440 0000011C E3833020        orr              r3,r3,#2_100000
+  441 00000120 E7803102        str              r3,[r0,r2,LSL #2]
+  442 00000124 E2822001        add              r2,r2,#1
+  443 00000128 E3520010        cmp              r2,#16
+  444 0000012C 1AFFFFF9        bne              buc
+  445 00000130         
+  446 00000130 E59F0044        LDR              r0,=0xE0004014
+  447 00000134 E3A01003        mov              r1,#3
+  448 00000138 E5801000        str              r1,[r0]
+  449 0000013C E59F003C        LDR              r0,=0xE0004018
+  450 00000140 E59F103C        LDR              r1,=149999
+  451 00000144 E5801000        str              r1,[r0]
+  452 00000148 E59F0038        LDR              r0,=0xE000400C
+  453 0000014C E3A01000        mov              r1,#0
+  454 00000150 E5801000        str              r1,[r0]
+  455 00000154 E59F0030        LDR              r0,=0xE0004004
+  456 00000158 E3A01001        mov              r1,#1
+  457 0000015C E5801000        str              r1,[r0]
+  458 00000160         
+  459 00000160                 IMPORT           inicio
+  460 00000160 E59F0028        LDR              R0, =inicio
+  461 00000164 E12FFF10        BX               R0
+  462 00000168         
+  463 00000168         
+  464 00000168                 IF               :DEF:__MICROLIB
+  470 00000168         ; User Initial Stack & Heap 
+  471 00000168 E01FC080 
+              E01FC000 
+              00000000 
+              FFFFF200 
+              00000000 
+              E0004014 
+              E0004018 
+              000249EF 
+              E000400C 
+              E0004004 
+              00000000         AREA             |.text|, CODE, READONLY
+  472 00000000         
+  473 00000000         ;IMPORT  __use_two_region_memory 
+  474 00000000                 EXPORT           __user_initial_stackheap
+  475 00000000         __user_initial_stackheap
+  476 00000000         
+  477 00000000 E59F000C        LDR              R0, =  Heap_Mem
+  478 00000004 E59F100C        LDR              R1, =(Stack_Mem + USR_Stack_Siz
+
+
+
+ARM Macro Assembler    Page 12 
+
+
+e)
+  479 00000008 E59F2004        LDR              R2, = (Heap_Mem +      Heap_Siz
+e)
+  480 0000000C E59F3004        LDR              R3, = Stack_Mem
+  481 00000010 E12FFF1E        BX               LR
+  482 00000014                 ENDIF
+  483 00000014         
+  484 00000014         
+  485 00000014                 END
+              00000000 
+              00000000 
+Command Line: --debug --xref --apcs=interwork --depend=Startup.d -oStartup.o -I
+"C:\Program Files\ARM\INC" -I"C:\Program Files\ARM\INC\Philips" --predefine="__
+EVAL SETA 1" --list=Startup.lst Startup.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+STACK 00000000
+
+Symbol: STACK
+   Definitions
+      At line 84 in file Startup.s
+   Uses
+      None
+Comment: STACK unused
+Stack_Mem 00000000
+
+Symbol: Stack_Mem
+   Definitions
+      At line 86 in file Startup.s
+   Uses
+      At line 478 in file Startup.s
+      At line 480 in file Startup.s
+
+Stack_Top 00000800
+
+Symbol: Stack_Top
+   Definitions
+      At line 89 in file Startup.s
+   Uses
+      At line 387 in file Startup.s
+Comment: Stack_Top used once
+__initial_sp 00000000
+
+Symbol: __initial_sp
+   Definitions
+      At line 87 in file Startup.s
+   Uses
+      None
+Comment: __initial_sp unused
+4 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+HEAP 00000000
+
+Symbol: HEAP
+   Definitions
+      At line 98 in file Startup.s
+   Uses
+      None
+Comment: HEAP unused
+Heap_Mem 00000000
+
+Symbol: Heap_Mem
+   Definitions
+      At line 100 in file Startup.s
+   Uses
+      At line 477 in file Startup.s
+      At line 479 in file Startup.s
+
+__heap_base 00000000
+
+Symbol: __heap_base
+   Definitions
+      At line 99 in file Startup.s
+   Uses
+      None
+Comment: __heap_base unused
+__heap_limit 00000000
+
+Symbol: __heap_limit
+   Definitions
+      At line 101 in file Startup.s
+   Uses
+      None
+Comment: __heap_limit unused
+4 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+DAbt_Addr 00000030
+
+Symbol: DAbt_Addr
+   Definitions
+      At line 267 in file Startup.s
+   Uses
+      At line 257 in file Startup.s
+Comment: DAbt_Addr used once
+FIQ_Addr 0000003C
+
+Symbol: FIQ_Addr
+   Definitions
+      At line 270 in file Startup.s
+   Uses
+      At line 261 in file Startup.s
+Comment: FIQ_Addr used once
+IRQ_Addr 00000038
+
+Symbol: IRQ_Addr
+   Definitions
+      At line 269 in file Startup.s
+   Uses
+      None
+Comment: IRQ_Addr unused
+PAbt_Addr 0000002C
+
+Symbol: PAbt_Addr
+   Definitions
+      At line 266 in file Startup.s
+   Uses
+      At line 256 in file Startup.s
+Comment: PAbt_Addr used once
+PLL_Loop 0000007C
+
+Symbol: PLL_Loop
+   Definitions
+      At line 344 in file Startup.s
+   Uses
+      At line 346 in file Startup.s
+Comment: PLL_Loop used once
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 244 in file Startup.s
+   Uses
+      None
+Comment: RESET unused
+RSE_DAbt 0000004C
+
+Symbol: RSE_DAbt
+   Definitions
+      At line 275 in file Startup.s
+   Uses
+      At line 267 in file Startup.s
+      At line 275 in file Startup.s
+
+RSE_FIQ 00000054
+
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+Symbol: RSE_FIQ
+   Definitions
+      At line 277 in file Startup.s
+   Uses
+      At line 270 in file Startup.s
+      At line 277 in file Startup.s
+
+RSE_IRQ 00000050
+
+Symbol: RSE_IRQ
+   Definitions
+      At line 276 in file Startup.s
+   Uses
+      At line 269 in file Startup.s
+      At line 276 in file Startup.s
+
+RSE_PAbt 00000048
+
+Symbol: RSE_PAbt
+   Definitions
+      At line 274 in file Startup.s
+   Uses
+      At line 266 in file Startup.s
+      At line 274 in file Startup.s
+
+RSE_Reset 00000058
+
+Symbol: RSE_Reset
+   Definitions
+      At line 283 in file Startup.s
+   Uses
+      At line 263 in file Startup.s
+Comment: RSE_Reset used once
+RSE_SWI 00000044
+
+Symbol: RSE_SWI
+   Definitions
+      At line 273 in file Startup.s
+   Uses
+      At line 265 in file Startup.s
+      At line 273 in file Startup.s
+
+RSE_Undef 00000040
+
+Symbol: RSE_Undef
+   Definitions
+      At line 272 in file Startup.s
+   Uses
+      At line 264 in file Startup.s
+      At line 272 in file Startup.s
+
+Reset_Addr 00000020
+
+Symbol: Reset_Addr
+   Definitions
+      At line 263 in file Startup.s
+   Uses
+      At line 253 in file Startup.s
+Comment: Reset_Addr used once
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Relocatable symbols
+
+SWI_Addr 00000028
+
+Symbol: SWI_Addr
+   Definitions
+      At line 265 in file Startup.s
+   Uses
+      At line 255 in file Startup.s
+Comment: SWI_Addr used once
+Undef_Addr 00000024
+
+Symbol: Undef_Addr
+   Definitions
+      At line 264 in file Startup.s
+   Uses
+      At line 254 in file Startup.s
+Comment: Undef_Addr used once
+Vectors 00000000
+
+Symbol: Vectors
+   Definitions
+      At line 253 in file Startup.s
+   Uses
+      None
+Comment: Vectors unused
+buc 00000118
+
+Symbol: buc
+   Definitions
+      At line 439 in file Startup.s
+   Uses
+      At line 444 in file Startup.s
+Comment: buc used once
+chanel2irq 000000FC
+
+Symbol: chanel2irq
+   Definitions
+      At line 433 in file Startup.s
+   Uses
+      At line 437 in file Startup.s
+Comment: chanel2irq used once
+sigue 0000010C
+
+Symbol: sigue
+   Definitions
+      At line 436 in file Startup.s
+   Uses
+      At line 431 in file Startup.s
+Comment: sigue used once
+20 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.text 00000000
+
+Symbol: .text
+   Definitions
+      At line 471 in file Startup.s
+   Uses
+      None
+Comment: .text unused
+__user_initial_stackheap 00000000
+
+Symbol: __user_initial_stackheap
+   Definitions
+      At line 475 in file Startup.s
+   Uses
+      At line 474 in file Startup.s
+Comment: __user_initial_stackheap used once
+2 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+ABT_Stack_Size 00000000
+
+Symbol: ABT_Stack_Size
+   Definitions
+      At line 76 in file Startup.s
+   Uses
+      At line 82 in file Startup.s
+      At line 397 in file Startup.s
+
+BCFG0_OFS 00000000
+
+Symbol: BCFG0_OFS
+   Definitions
+      At line 169 in file Startup.s
+   Uses
+      None
+Comment: BCFG0_OFS unused
+BCFG0_SETUP 00000000
+
+Symbol: BCFG0_SETUP
+   Definitions
+      At line 187 in file Startup.s
+   Uses
+      None
+Comment: BCFG0_SETUP unused
+BCFG0_Val 0000FBEF
+
+Symbol: BCFG0_Val
+   Definitions
+      At line 188 in file Startup.s
+   Uses
+      None
+Comment: BCFG0_Val unused
+BCFG1_OFS 00000004
+
+Symbol: BCFG1_OFS
+   Definitions
+      At line 170 in file Startup.s
+   Uses
+      None
+Comment: BCFG1_OFS unused
+BCFG1_SETUP 00000000
+
+Symbol: BCFG1_SETUP
+   Definitions
+      At line 200 in file Startup.s
+   Uses
+      None
+Comment: BCFG1_SETUP unused
+BCFG1_Val 0000FBEF
+
+Symbol: BCFG1_Val
+   Definitions
+      At line 201 in file Startup.s
+   Uses
+      None
+Comment: BCFG1_Val unused
+BCFG2_OFS 00000008
+
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Absolute symbols
+
+Symbol: BCFG2_OFS
+   Definitions
+      At line 171 in file Startup.s
+   Uses
+      None
+Comment: BCFG2_OFS unused
+BCFG2_SETUP 00000000
+
+Symbol: BCFG2_SETUP
+   Definitions
+      At line 213 in file Startup.s
+   Uses
+      None
+Comment: BCFG2_SETUP unused
+BCFG2_Val 0000FBEF
+
+Symbol: BCFG2_Val
+   Definitions
+      At line 214 in file Startup.s
+   Uses
+      None
+Comment: BCFG2_Val unused
+BCFG3_OFS 0000000C
+
+Symbol: BCFG3_OFS
+   Definitions
+      At line 172 in file Startup.s
+   Uses
+      None
+Comment: BCFG3_OFS unused
+BCFG3_SETUP 00000000
+
+Symbol: BCFG3_SETUP
+   Definitions
+      At line 226 in file Startup.s
+   Uses
+      None
+Comment: BCFG3_SETUP unused
+BCFG3_Val 0000FBEF
+
+Symbol: BCFG3_Val
+   Definitions
+      At line 227 in file Startup.s
+   Uses
+      None
+Comment: BCFG3_Val unused
+EMC_BASE FFE00000
+
+Symbol: EMC_BASE
+   Definitions
+      At line 168 in file Startup.s
+   Uses
+      None
+Comment: EMC_BASE unused
+EMC_SETUP 00000000
+
+Symbol: EMC_SETUP
+   Definitions
+      At line 175 in file Startup.s
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Absolute symbols
+
+   Uses
+      At line 295 in file Startup.s
+Comment: EMC_SETUP used once
+FIQ_Stack_Size 00000000
+
+Symbol: FIQ_Stack_Size
+   Definitions
+      At line 77 in file Startup.s
+   Uses
+      At line 82 in file Startup.s
+      At line 402 in file Startup.s
+
+F_Bit 00000040
+
+Symbol: F_Bit
+   Definitions
+      At line 62 in file Startup.s
+   Uses
+      At line 390 in file Startup.s
+      At line 395 in file Startup.s
+      At line 400 in file Startup.s
+      At line 405 in file Startup.s
+      At line 410 in file Startup.s
+
+Heap_Size 00000000
+
+Symbol: Heap_Size
+   Definitions
+      At line 96 in file Startup.s
+   Uses
+      At line 100 in file Startup.s
+      At line 479 in file Startup.s
+
+IRQ_Stack_Size 00000400
+
+Symbol: IRQ_Stack_Size
+   Definitions
+      At line 78 in file Startup.s
+   Uses
+      At line 82 in file Startup.s
+      At line 407 in file Startup.s
+
+ISR_Stack_Size 00000800
+
+Symbol: ISR_Stack_Size
+   Definitions
+      At line 82 in file Startup.s
+   Uses
+      At line 87 in file Startup.s
+Comment: ISR_Stack_Size used once
+I_Bit 00000080
+
+Symbol: I_Bit
+   Definitions
+      At line 61 in file Startup.s
+   Uses
+      At line 390 in file Startup.s
+      At line 395 in file Startup.s
+      At line 400 in file Startup.s
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Absolute symbols
+
+      At line 405 in file Startup.s
+      At line 410 in file Startup.s
+
+MAMCR_OFS 00000000
+
+Symbol: MAMCR_OFS
+   Definitions
+      At line 148 in file Startup.s
+   Uses
+      At line 362 in file Startup.s
+Comment: MAMCR_OFS used once
+MAMCR_Val 00000002
+
+Symbol: MAMCR_Val
+   Definitions
+      At line 163 in file Startup.s
+   Uses
+      At line 361 in file Startup.s
+Comment: MAMCR_Val used once
+MAMTIM_OFS 00000004
+
+Symbol: MAMTIM_OFS
+   Definitions
+      At line 149 in file Startup.s
+   Uses
+      At line 360 in file Startup.s
+Comment: MAMTIM_OFS used once
+MAMTIM_Val 00000004
+
+Symbol: MAMTIM_Val
+   Definitions
+      At line 164 in file Startup.s
+   Uses
+      At line 359 in file Startup.s
+Comment: MAMTIM_Val used once
+MAM_BASE E01FC000
+
+Symbol: MAM_BASE
+   Definitions
+      At line 147 in file Startup.s
+   Uses
+      At line 358 in file Startup.s
+Comment: MAM_BASE used once
+MAM_SETUP 00000001
+
+Symbol: MAM_SETUP
+   Definitions
+      At line 162 in file Startup.s
+   Uses
+      At line 357 in file Startup.s
+Comment: MAM_SETUP used once
+MEMMAP E01FC040
+
+Symbol: MEMMAP
+   Definitions
+      At line 367 in file Startup.s
+   Uses
+      None
+Comment: MEMMAP unused
+
+
+
+ARM Macro Assembler    Page 5 Alphabetic symbol ordering
+Absolute symbols
+
+Mode_ABT 00000017
+
+Symbol: Mode_ABT
+   Definitions
+      At line 57 in file Startup.s
+   Uses
+      At line 395 in file Startup.s
+Comment: Mode_ABT used once
+Mode_FIQ 00000011
+
+Symbol: Mode_FIQ
+   Definitions
+      At line 54 in file Startup.s
+   Uses
+      At line 400 in file Startup.s
+Comment: Mode_FIQ used once
+Mode_IRQ 00000012
+
+Symbol: Mode_IRQ
+   Definitions
+      At line 55 in file Startup.s
+   Uses
+      At line 405 in file Startup.s
+Comment: Mode_IRQ used once
+Mode_SVC 00000013
+
+Symbol: Mode_SVC
+   Definitions
+      At line 56 in file Startup.s
+   Uses
+      At line 410 in file Startup.s
+Comment: Mode_SVC used once
+Mode_SYS 0000001F
+
+Symbol: Mode_SYS
+   Definitions
+      At line 59 in file Startup.s
+   Uses
+      None
+Comment: Mode_SYS unused
+Mode_UND 0000001B
+
+Symbol: Mode_UND
+   Definitions
+      At line 58 in file Startup.s
+   Uses
+      At line 390 in file Startup.s
+Comment: Mode_UND used once
+Mode_USR 00000010
+
+Symbol: Mode_USR
+   Definitions
+      At line 53 in file Startup.s
+   Uses
+      None
+Comment: Mode_USR unused
+PINSEL2 E002C014
+
+Symbol: PINSEL2
+
+
+
+ARM Macro Assembler    Page 6 Alphabetic symbol ordering
+Absolute symbols
+
+   Definitions
+      At line 233 in file Startup.s
+   Uses
+      None
+Comment: PINSEL2 unused
+PINSEL2_Val 0E6149E4
+
+Symbol: PINSEL2_Val
+   Definitions
+      At line 234 in file Startup.s
+   Uses
+      None
+Comment: PINSEL2_Val unused
+PLLCFG_MSEL 0000001F
+
+Symbol: PLLCFG_MSEL
+   Definitions
+      At line 130 in file Startup.s
+   Uses
+      None
+Comment: PLLCFG_MSEL unused
+PLLCFG_OFS 00000004
+
+Symbol: PLLCFG_OFS
+   Definitions
+      At line 125 in file Startup.s
+   Uses
+      At line 337 in file Startup.s
+Comment: PLLCFG_OFS used once
+PLLCFG_PSEL 00000060
+
+Symbol: PLLCFG_PSEL
+   Definitions
+      At line 131 in file Startup.s
+   Uses
+      None
+Comment: PLLCFG_PSEL unused
+PLLCFG_Val 00000024
+
+Symbol: PLLCFG_Val
+   Definitions
+      At line 143 in file Startup.s
+   Uses
+      At line 336 in file Startup.s
+Comment: PLLCFG_Val used once
+PLLCON_OFS 00000000
+
+Symbol: PLLCON_OFS
+   Definitions
+      At line 124 in file Startup.s
+   Uses
+      At line 339 in file Startup.s
+      At line 350 in file Startup.s
+
+PLLCON_PLLC 00000002
+
+Symbol: PLLCON_PLLC
+   Definitions
+      At line 129 in file Startup.s
+
+
+
+ARM Macro Assembler    Page 7 Alphabetic symbol ordering
+Absolute symbols
+
+   Uses
+      At line 349 in file Startup.s
+Comment: PLLCON_PLLC used once
+PLLCON_PLLE 00000001
+
+Symbol: PLLCON_PLLE
+   Definitions
+      At line 128 in file Startup.s
+   Uses
+      At line 338 in file Startup.s
+      At line 349 in file Startup.s
+
+PLLFEED_OFS 0000000C
+
+Symbol: PLLFEED_OFS
+   Definitions
+      At line 127 in file Startup.s
+   Uses
+      At line 340 in file Startup.s
+      At line 341 in file Startup.s
+      At line 351 in file Startup.s
+      At line 352 in file Startup.s
+
+PLLSTAT_OFS 00000008
+
+Symbol: PLLSTAT_OFS
+   Definitions
+      At line 126 in file Startup.s
+   Uses
+      At line 344 in file Startup.s
+Comment: PLLSTAT_OFS used once
+PLLSTAT_PLOCK 00000400
+
+Symbol: PLLSTAT_PLOCK
+   Definitions
+      At line 132 in file Startup.s
+   Uses
+      At line 345 in file Startup.s
+Comment: PLLSTAT_PLOCK used once
+PLL_BASE E01FC080
+
+Symbol: PLL_BASE
+   Definitions
+      At line 123 in file Startup.s
+   Uses
+      At line 331 in file Startup.s
+Comment: PLL_BASE used once
+PLL_SETUP 00000001
+
+Symbol: PLL_SETUP
+   Definitions
+      At line 142 in file Startup.s
+   Uses
+      At line 330 in file Startup.s
+Comment: PLL_SETUP used once
+SVC_Stack_Size 00000400
+
+Symbol: SVC_Stack_Size
+   Definitions
+
+
+
+ARM Macro Assembler    Page 8 Alphabetic symbol ordering
+Absolute symbols
+
+      At line 75 in file Startup.s
+   Uses
+      At line 82 in file Startup.s
+      At line 412 in file Startup.s
+
+UND_Stack_Size 00000000
+
+Symbol: UND_Stack_Size
+   Definitions
+      At line 74 in file Startup.s
+   Uses
+      At line 82 in file Startup.s
+      At line 392 in file Startup.s
+
+USR_Stack_Size 00000000
+
+Symbol: USR_Stack_Size
+   Definitions
+      At line 79 in file Startup.s
+   Uses
+      At line 86 in file Startup.s
+      At line 478 in file Startup.s
+
+VPBDIV E01FC100
+
+Symbol: VPBDIV
+   Definitions
+      At line 105 in file Startup.s
+   Uses
+      None
+Comment: VPBDIV unused
+VPBDIV_SETUP 00000000
+
+Symbol: VPBDIV_SETUP
+   Definitions
+      At line 118 in file Startup.s
+   Uses
+      At line 322 in file Startup.s
+Comment: VPBDIV_SETUP used once
+VPBDIV_Val 00000000
+
+Symbol: VPBDIV_Val
+   Definitions
+      At line 119 in file Startup.s
+   Uses
+      None
+Comment: VPBDIV_Val unused
+55 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+inicio 00000000
+
+Symbol: inicio
+   Definitions
+      At line 459 in file Startup.s
+   Uses
+      At line 460 in file Startup.s
+Comment: inicio used once
+1 symbol
+422 symbols in table

@@ -1,0 +1,27 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+D:\Unizar\1. Primero\Cuatrimestre 2\Arquitectura y Organización de Computadores I\Project\aoc1_p4\practica4.uvproj
+Project File Date:  06/19/2013
+
+<h2>Output:</h2>
+Build target 'Target 1'
+assembling practica4.s...
+linking...
+practica4.axf: Warning: L6305W: Image does not have an entry point. (Not specified or not set due to multiple choices.)
+Program Size: Code=428 RO-data=0 RW-data=96 ZI-data=0  
+"practica4.axf" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+assembling practica4.s...
+linking...
+practica4.axf: Warning: L6305W: Image does not have an entry point. (Not specified or not set due to multiple choices.)
+Program Size: Code=440 RO-data=0 RW-data=96 ZI-data=0  
+"practica4.axf" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+assembling practica4.s...
+linking...
+practica4.axf: Warning: L6305W: Image does not have an entry point. (Not specified or not set due to multiple choices.)
+Program Size: Code=428 RO-data=0 RW-data=96 ZI-data=0  
+"practica4.axf" - 0 Error(s), 1 Warning(s).

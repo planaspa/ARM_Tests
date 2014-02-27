@@ -1,0 +1,20 @@
+*** Creating Trace Output File 'Practica2.tra' Ok.
+### Preparing for ADS-LD.
+### Creating ADS-LD Command Line
+### List of Objects: adding '"practica2.o"'
+### List of Objects: adding '"practica2_2.o"'
+### ADS-LD Command completed:
+--cpu ARM7TDMI "practica2.o" "practica2_2.o" --strict --scatter ".\practica2.sct" 
+--autoat --summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\Practica2.map" -o "Practica2.axf"### Preparing Environment (PrepEnvAds)
+### ADS-LD Output File: 'Practica2.axf'
+### ADS-LD Command File: 'Practica2.lnp'
+### Checking for dirty Components...
+### Creating CmdFile 'Practica2.lnp', Handle=0x00000120
+### Writing '.lnp' file
+### ADS-LD Command file 'Practica2.lnp' is ready.
+### ADS-LD: About to start ADS-LD Thread.
+### ADS-LD: executed with 0 errors
+### Updating obj list
+### LDADS_file() completed.

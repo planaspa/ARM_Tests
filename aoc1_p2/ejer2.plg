@@ -1,0 +1,17 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+Z:\AOC1\aoc1_p2\ejer2.uvproj
+Project File Date:  04/29/2013
+
+<h2>Output:</h2>
+Build target 'Target 1'
+assembling practica2_2.s...
+practica2_2.s(25): warning: A1313W: Missing END directive at end of file
+practica2_2.s:    25 00000030 
+practica2_2.s: 0 Errors, 1 Warning
+linking...
+Program Size: Code=64 RO-data=0 RW-data=36 ZI-data=0  
+"ejer2.axf" - 0 Error(s), 1 Warning(s).

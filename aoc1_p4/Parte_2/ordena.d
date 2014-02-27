@@ -1,0 +1,1 @@
+ordena.o: ordena.s

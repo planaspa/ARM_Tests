@@ -1,0 +1,4 @@
+--cpu ARM7TDMI "practica2_2.o" --strict --scatter ".\practica2.sct" 
+--autoat --summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\ejer2.map" -o "ejer2.axf"

@@ -1,0 +1,39 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+D:\Unizar\1. Primero\Cuatrimestre 2\Arquitectura y Organización de Computadores I\Project\aoc1_p4\Parte_2\parte2.uvproj
+Project File Date:  05/16/2013
+
+<h2>Output:</h2>
+Build target 'Target 1'
+assembling Startup.s...
+compiling progC.c...
+assembling ordena.s...
+linking...
+Program Size: Code=912 RO-data=16 RW-data=0 ZI-data=1528  
+"parte2.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+linking...
+Program Size: Code=912 RO-data=16 RW-data=0 ZI-data=1528  
+"parte2.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+compiling progC.c...
+linking...
+Program Size: Code=912 RO-data=16 RW-data=0 ZI-data=1544  
+"parte2.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+linking...
+Program Size: Code=912 RO-data=16 RW-data=0 ZI-data=1544  
+"parte2.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+compiling progC.c...
+linking...
+Program Size: Code=912 RO-data=16 RW-data=0 ZI-data=1528  
+"parte2.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+assembling ordena.s...
+linking...
+Program Size: Code=912 RO-data=16 RW-data=0 ZI-data=1528  
+"parte2.axf" - 0 Error(s), 0 Warning(s).

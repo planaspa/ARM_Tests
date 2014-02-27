@@ -1,0 +1,136 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             datos,DATA,READWRITE 
+                                                            ; area de datos
+    2 00000000 43 44 45 
+              2B 20 3D 
+              FF FF 36 
+              37 38 39 
+              41 42 FF 
+              FF 30 31 
+              32 33 34 
+              35       trad    DCB              "CDE+ =", 0xFF, 0xFF, "6789AB",
+ 0xFF, 0xFF, "012345"
+    3 00000016 FF      finm    DCB              0xFF
+    4 00000017 11 12 04 
+              03 04 0C 
+              10 04 05 
+              04 0D 12 
+              FF       msj     DCB              0x11, 0x12, 0x04, 0x03, 0x04, 0
+x0C, 0x10, 0x04, 0x05, 0x04, 0x0D, 0x12, 0xFF
+    5 00000024         msjf
+    6 00000024         
+    7 00000024         
+    8 00000024                 AREA             codigo,CODE,READONLY 
+                                                            ; area de codigo
+    9 00000000                 ENTRY
+   10 00000000         
+   11 00000000 E59F0028        LDR              r0,=trad    ; r0=@trad
+   12 00000004 E59F1028        LDR              r1,=msj     ; r1=@msj
+   13 00000008 E59F5028        LDR              r5,=msjf    ; r5=@msjf
+   14 0000000C E59F6028        LDR              r6,=finm
+   15 00000010 E5C67000        strb             r7,[r6]
+   16 00000014         
+   17 00000014 E4D12001 
+                       buc     ldrb             r2,[r1],#1  ; r2= Memb[r1] , r1
+                                                            =r1+1
+   18 00000018 E0803002        add              r3,r0,r2    ; r3= r0+r2
+   19 0000001C E5D34000        ldrb             r4,[r3]     ; r4= Memb[r3]
+   20 00000020 E4C54001        strb             r4,[r5],#1  ; Memb[r5]= r4, r5=
+                                                            r5+1
+   21 00000024 E1540007        cmp              r4,r7
+   22 00000028 1AFFFFF9        bne              buc
+   23 0000002C         
+   24 0000002C EAFFFFFE 
+                       fin     b                fin
+                       
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+Command Line: --debug --xref --apcs=interwork --depend=practica2_2.d -opractica
+2_2.o -IC:\Keil\ARM\INC -IC:\Keil\ARM\INC\Philips --predefine="__EVAL SETA 1" -
+-list=practica2_2.lst practica2_2.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+datos 00000000
+
+Symbol: datos
+   Definitions
+      At line 1 in file practica2_2.s
+   Uses
+      None
+Comment: datos unused
+finm 00000016
+
+Symbol: finm
+   Definitions
+      At line 3 in file practica2_2.s
+   Uses
+      At line 14 in file practica2_2.s
+Comment: finm used once
+msj 00000017
+
+Symbol: msj
+   Definitions
+      At line 4 in file practica2_2.s
+   Uses
+      At line 12 in file practica2_2.s
+Comment: msj used once
+msjf 00000024
+
+Symbol: msjf
+   Definitions
+      At line 5 in file practica2_2.s
+   Uses
+      At line 13 in file practica2_2.s
+Comment: msjf used once
+trad 00000000
+
+Symbol: trad
+   Definitions
+      At line 2 in file practica2_2.s
+   Uses
+      At line 11 in file practica2_2.s
+Comment: trad used once
+5 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+buc 00000014
+
+Symbol: buc
+   Definitions
+      At line 17 in file practica2_2.s
+   Uses
+      At line 22 in file practica2_2.s
+Comment: buc used once
+codigo 00000000
+
+Symbol: codigo
+   Definitions
+      At line 8 in file practica2_2.s
+   Uses
+      None
+Comment: codigo unused
+fin 0000002C
+
+Symbol: fin
+   Definitions
+      At line 24 in file practica2_2.s
+   Uses
+      At line 24 in file practica2_2.s
+Comment: fin used once
+3 symbols
+334 symbols in table

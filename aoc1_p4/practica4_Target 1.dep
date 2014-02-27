@@ -1,0 +1,4 @@
+Dependencies for Project 'practica4', Target 'Target 1': (DO NOT MODIFY !)
+F (.\practica4.s)(0x51C37008)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I "C:\Program Files\ARM\INC" -I "C:\Program Files\ARM\INC\Philips" --list "practica4.lst" --xref -o "practica4.o" --depend "practica4.d")
+F (.\ordena.s)(0x5194A40D)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I "C:\Program Files\ARM\INC" -I "C:\Program Files\ARM\INC\Philips" --list "ordena.lst" --xref -o "ordena.o" --depend "ordena.d")
+F (.\suma.s)(0x51C16F5C)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I "C:\Program Files\ARM\INC" -I "C:\Program Files\ARM\INC\Philips" --list "suma.lst" --xref -o "suma.o" --depend "suma.d")
